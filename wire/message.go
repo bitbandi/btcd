@@ -327,14 +327,11 @@ func WriteMessageWithEncodingN(w io.Writer, msg Message, pver uint32,
 	return totalBytes, err
 }
 
-// ReadMessageWithEncodingN reads, validates, and parses the next bitcoin Message
+// ReadMessageBase reads, validates, and parses the next bitcoin Message
 // from r for the provided protocol version and bitcoin network.  It returns the
-// number of bytes read in addition to the parsed Message and raw bytes which
-// comprise the message.  This function is the same as ReadMessageN except it
-// allows the caller to specify which message encoding is to to consult when
-// decoding wire messages.
-func ReadMessageWithEncodingN(r io.Reader, pver uint32, btcnet BitcoinNet,
-	enc MessageEncoding) (int, Message, []byte, error) {
+// number of bytes read in addition to the base Message and raw bytes which
+// comprise the message.
+func ReadMessageBase(r io.Reader, pver uint32, btcnet BitcoinNet) (int, Message, []byte, error) {
 
 	totalBytes := 0
 	n, hdr, err := readMessageHeader(r)
@@ -402,6 +399,24 @@ func ReadMessageWithEncodingN(r io.Reader, pver uint32, btcnet BitcoinNet,
 			"indicates %v, but actual checksum is %v.",
 			hdr.checksum, checksum)
 		return totalBytes, nil, nil, messageError("ReadMessage", str)
+	}
+
+	return totalBytes, msg, payload, nil
+}
+
+
+// ReadMessageWithEncodingN reads, validates, and parses the next bitcoin Message
+// from r for the provided protocol version and bitcoin network.  It returns the
+// number of bytes read in addition to the parsed Message and raw bytes which
+// comprise the message.  This function is the same as ReadMessageN except it
+// allows the caller to specify which message encoding is to to consult when
+// decoding wire messages.
+func ReadMessageWithEncodingN(r io.Reader, pver uint32, btcnet BitcoinNet,
+	enc MessageEncoding) (int, Message, []byte, error) {
+
+	totalBytes, msg, payload, err := ReadMessageBase(r, pver, btcnet)
+	if err != nil {
+		return totalBytes, nil, nil, err
 	}
 
 	// Unmarshal message.  NOTE: This must be a *bytes.Buffer since the
