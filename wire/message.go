@@ -196,7 +196,7 @@ func makeEmptyMessage(command string) (Message, error) {
 		msg = &MsgCFCheckpt{}
 
 	default:
-		return nil, ErrUnknownMessage
+		msg = &MsgUnknown{Cmd:command}
 	}
 	return msg, nil
 }
