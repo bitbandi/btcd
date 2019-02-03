@@ -7,6 +7,7 @@ package wire
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 // MsgUnknown implements the Message interface and represents a bitcoin
 // unknown message.
 type MsgUnknown struct {
-	Cmd string
+	Cmd  string
 	Data []byte
 }
 
@@ -27,8 +28,7 @@ type MsgUnknown struct {
 // This is part of the Message interface implementation.
 func (msg *MsgUnknown) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) error {
 	var err error
-	msg.Data, err = ReadVarBytes(r, pver, MaxMessageDataSize,
-		"unknown data")
+	msg.Data, err = ioutil.ReadAll(r)
 	return err
 }
 
@@ -62,7 +62,7 @@ func (msg *MsgUnknown) MaxPayloadLength(pver uint32) uint32 {
 // Message interface.  See MsgUnknown for details.
 func NewMsgUnknown(command string, data []byte) *MsgUnknown {
 	return &MsgUnknown{
-		Cmd: command,
+		Cmd:  command,
 		Data: data,
 	}
 }
