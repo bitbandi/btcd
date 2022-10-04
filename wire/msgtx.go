@@ -288,6 +288,7 @@ func NewTxOut(value int64, pkScript []byte) *TxOut {
 // inputs and outputs.
 type MsgTx struct {
 	Version  int32
+	Time     uint32
 	TxIn     []*TxIn
 	TxOut    []*TxOut
 	LockTime uint32
@@ -336,6 +337,7 @@ func (msg *MsgTx) Copy() *MsgTx {
 	// for the transaction inputs and outputs.
 	newTx := MsgTx{
 		Version:  msg.Version,
+		Time:     msg.Time,
 		TxIn:     make([]*TxIn, 0, len(msg.TxIn)),
 		TxOut:    make([]*TxOut, 0, len(msg.TxOut)),
 		LockTime: msg.LockTime,
@@ -414,6 +416,11 @@ func (msg *MsgTx) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) error
 		return err
 	}
 	msg.Version = int32(version)
+
+	msg.Time, err = binarySerializer.Uint32(r, littleEndian)
+	if err != nil {
+		return err
+	}
 
 	count, err := ReadVarInt(r, pver)
 	if err != nil {
@@ -680,6 +687,11 @@ func (msg *MsgTx) DeserializeNoWitness(r io.Reader) error {
 // database, as opposed to encoding transactions for the wire.
 func (msg *MsgTx) BtcEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
 	err := binarySerializer.PutUint32(w, littleEndian, uint32(msg.Version))
+	if err != nil {
+		return err
+	}
+
+	err = binarySerializer.PutUint32(w, littleEndian, msg.Time)
 	if err != nil {
 		return err
 	}
